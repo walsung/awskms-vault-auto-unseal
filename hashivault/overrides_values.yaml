@@ -68,7 +68,7 @@ server:
             }
             seal "awskms" {
                region = "us-east-1"
-               kms_key_id = "arn:aws:kms:us-east-1:319211394597:key/3c319721-4b3e-4106-9ea4-2146b3ace80d"
+               kms_key_id = "arn:aws:kms:######"        ## your kms key arn
             }
             disable_mlock = true
             service_registration "kubernetes" {}
