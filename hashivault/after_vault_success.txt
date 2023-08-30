@@ -1,0 +1,44 @@
+
+
+mk kubectl -n vault exec -ti vault-0 -- vault operator init
+
+## should be auto-unseal with kms, can check the logs with "k -n vault logs vault-0"
+mk kubectl -n vault exec -ti vault-0 -- vault operator unseal
+
+mk kubectl -n vault exec -ti vault-0 -- vault login <root token>
+
+## confirm if vault-0,1,2  all three joining together
+mk kubectl -n vault exec -ti vault-0 -- vault operator raft list-peers
+
+
+## background job to port fowarding the tcp 8200 port to https://localhost:8200
+mk kubectl -n vault port-forward vault-0 8200:8200 &
+
+
+mk kubectl -n vault exec --stdin=true --tty=true -ti vault-0 -- vault policy write developer - <<EOF
+path "apps/*" {
+  capabilities = ["read","list"]
+}
+EOF
+
+
+mk kubectl -n vault exec -ti vault-0 -- vault policy read developer
+
+mk kubectl -n vault exec -ti vault-0 -- vault auth enable approle
+
+mk kubectl -n vault exec -ti vault-0 -- vault write auth/approle/role/developer policies=developer token_ttl=21600s token_max_ttl=216000s
+
+mk kubectl -n vault exec -ti vault-0 -- vault auth enable userpass
+
+// this -path is the mount point of python hvac
+mk kubectl -n vault exec -ti vault-0 -- vault secrets enable -path=apps kv-v2
+
+mk kubectl -n vault exec -ti vault-0 -- vault secrets list --detailed
+
+mk kubectl -n vault exec -ti vault-0 -- vault secrets list
+
+## manually log in vault-0, vault write auth/userpass/users/billy password=<a complex password> policies=developer
+
+## manually log in vault-0,vault kv put apps/delta ro_api_secret=??? ro_api_key=???
+
+mk kubectl -n vault exec -ti vault-0 -- vault read auth/userpass/users/billy

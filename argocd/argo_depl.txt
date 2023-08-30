@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+spec:
+  destination:
+    name: ''
+    namespace: vault
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: dependency_helmchart
+    repoURL: 'git@github.com:walsung/awskms-vault-auto-unseal.git'
+    targetRevision: development
+    helm:
+      valueFiles:
+        - overrides_values.yaml
+  sources: []
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PruneLast=true
+      - PrunePropagationPolicy=background
